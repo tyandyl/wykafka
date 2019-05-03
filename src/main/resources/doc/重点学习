@@ -1,0 +1,67 @@
+MemoryRecordsBuilder recordsBuilder = recordsBuilder(buffer, maxUsableMagic);
+ProducerBatch batch = new ProducerBatch(tp, recordsBuilder, time.milliseconds());
+FutureRecordMetadata future = Utils.notNull(batch.tryAppend(timestamp, key, value, headers, callback, time.milliseconds()));
+
+先看recordsBuilder方法
+这个方法是使用MemoryRecords工具类创建一个MemoryRecordsBuilder,具体如下：
+MemoryRecords.builder(buffer, maxUsableMagic, compression, TimestampType.CREATE_TIME, 0L);
+这几个参数分别解释：
+buffer：这个是上边咱刚开辟的内存空间
+maxUsableMagic：消息类型，这里是v1,v2,标注消息是哪种数据结构
+compression:是压缩类型
+TimestampType.CREATE_TIME：是时间类型，因为MemoryRecordsBuilder 中有个属性是：logAppendTime，咱们根据TimestampType类型判断
+设置logAppendTime值，默认是-1，如果TimestampType是LOG_APPEND_TIME，则new当前时间赋值给logAppendTime,这里咱们传值是：CREATE_TIME,
+所以logAppendTime值，默认是-1.
+0L:是baseOffset
+
+最后MemoryRecordsBuilder 初始化重要参数属性，除了上边几个，还有如下几个属性：
+numRecords：记录的个数，默认为0
+lastOffset：最后一个消息的相对位移offset的位置。
+uncompressedRecordsSizeInBytes：默认为0
+actualCompressionRatio：默认为1
+bufferStream：其实就是把buffer的封装成ByteBufferOutputStream对象，new ByteBufferOutputStream(buffer),分析ByteBufferOutputStream这个类，
+发现就是把buffer封装一层，估计是为了扩容吧。
+initialPosition：初始化位置bufferStream.position()，其实就是buffer的.position()。为啥这里还有弄一个新的属性initialPosition呢，
+直接使用buffer的.position()不就得了，看后边。
+batchHeaderSizeInBytes：消息元数据的长度
+注：这里有个重点：bufferStream.position(initialPosition + batchHeaderSizeInBytes);这是增加元数据后的长度，看上边。
+appendStream：将bufferStream封装，增加压缩功能。
+
+----------------------------------------------------------------------------------------------------------------------------------------
+
+ProducerBatch batch = new ProducerBatch(tp, recordsBuilder, time.milliseconds());
+这里，我们传入TopicPartition tp, MemoryRecordsBuilder recordsBuilder(上边分析的), long createdMs
+ProducerBatch 初始化重要参数属性，除了上边几个，还有如下几个属性：
+produceFuture:创建ProduceRequestResult类，其实就是TopicPartition tp 的一层包装。
+
+batch.tryAppend(timestamp, key, value, headers, callback, time.milliseconds())
+这个方法很重要，看传入的参数，有key和value，估计就是这个方法把消息放到该放的地方，仔细看：
+这个方法层层点击，发现调用recordsBuilder.append(timestamp, key, value, headers);这个方法。
+接着看recordsBuilder吧。
+再层层点击，发现调用：appendWithOffset(offset, false, timestamp, key, value, headers) 这个方法。
+看看这个方法的参数：
+offset：当前消息的相对位移offset，判断:lastOffset == null ? baseOffset : lastOffset + 1;这里取值baseOffset，刚创建是0
+别的参数看名字也就明白了。
+
+因为咱们看v2消息格式的存储，所以层层点击发现：appendDefaultRecord(offset, timestamp, key, value, headers);
+在这个方法里：
+int offsetDelta = (int) (offset - baseOffset);获取相对位移，offset是咱传进来的，baseOffset是默认的0
+long timestampDelta = timestamp - firstTimestamp;计算当前时间和baseOffset对应的那个时间的差值。
+然后调用：int sizeInBytes = DefaultRecord.writeTo(appendStream, offsetDelta, timestampDelta, key, value, headers);
+这个方法很重要啊，仔细看：
+在DefaultRecord.writeTo(appendStream, offsetDelta, timestampDelta, key, value, headers);方法里：
+int sizeInBytes = sizeOfBodyInBytes(offsetDelta, timestampDelta, key, value, headers);
+获取key，value，offsetDelta,timestampDelta,headers的总长度。
+注意：offsetDelta和timestampDelta是减了baseOffset的相对位移和时间差，这么做的目的是为了节省内存空间。
+
+
+
+
+
+
+
+
+
+
+
+
