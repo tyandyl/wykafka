@@ -66,3 +66,5 @@ Java中 Collections.shuffle()
 顾名思义，shuffle是洗牌的意思，所以这个方法的作用是将list中的循序打乱，参数放入Lis
 
 MetricConfig监控
+
+AbstractQueuedSynchronizer

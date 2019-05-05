@@ -12,12 +12,12 @@ compression:是压缩类型
 TimestampType.CREATE_TIME：是时间类型，因为MemoryRecordsBuilder 中有个属性是：logAppendTime，咱们根据TimestampType类型判断
 设置logAppendTime值，默认是-1，如果TimestampType是LOG_APPEND_TIME，则new当前时间赋值给logAppendTime,这里咱们传值是：CREATE_TIME,
 所以logAppendTime值，默认是-1.
-0L:是baseOffset
+0L:是baseOffset,第一次创建，所以是0
 
 最后MemoryRecordsBuilder 初始化重要参数属性，除了上边几个，还有如下几个属性：
 numRecords：记录的个数，默认为0
 lastOffset：最后一个消息的相对位移offset的位置。
-uncompressedRecordsSizeInBytes：默认为0
+uncompressedRecordsSizeInBytes：默认为0，这个就是所有消息的长度，每个消息传进去后，uncompressedRecordsSizeInBytes=+当前消息的长度
 actualCompressionRatio：默认为1
 bufferStream：其实就是把buffer的封装成ByteBufferOutputStream对象，new ByteBufferOutputStream(buffer),分析ByteBufferOutputStream这个类，
 发现就是把buffer封装一层，估计是为了扩容吧。
@@ -33,6 +33,7 @@ ProducerBatch batch = new ProducerBatch(tp, recordsBuilder, time.milliseconds())
 这里，我们传入TopicPartition tp, MemoryRecordsBuilder recordsBuilder(上边分析的), long createdMs
 ProducerBatch 初始化重要参数属性，除了上边几个，还有如下几个属性：
 produceFuture:创建ProduceRequestResult类，其实就是TopicPartition tp 的一层包装。
+recordCount:记录的个数，每次增加一个一个消息，就加1。
 
 batch.tryAppend(timestamp, key, value, headers, callback, time.milliseconds())
 这个方法很重要，看传入的参数，有key和value，估计就是这个方法把消息放到该放的地方，仔细看：

@@ -103,8 +103,10 @@ public final class ClientUtils {
      * @return configured ChannelBuilder based on the configs.
      */
     public static ChannelBuilder createChannelBuilder(AbstractConfig config, Time time) {
-        SecurityProtocol securityProtocol = SecurityProtocol.forName(config.getString(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG));
-        String clientSaslMechanism = config.getString(SaslConfigs.SASL_MECHANISM);
+        SecurityProtocol securityProtocol = SecurityProtocol.forName(config.getString("security.protocol"));
+        //props.setProperty ("sasl.mechanism", "PLAIN");
+        //https://www.2bowl.info/kafka%E7%9A%84saslplain%E8%AE%A4%E8%AF%81%E9%85%8D%E7%BD%AE%E8%AF%B4%E6%98%8E/
+        String clientSaslMechanism = config.getString("sasl.mechanism");
         return ChannelBuilders.clientChannelBuilder(securityProtocol, JaasContext.Type.CLIENT, config, null,
                 clientSaslMechanism, time, true);
     }

@@ -19,8 +19,6 @@ package org.apache.kafka.common.record;
 import org.apache.kafka.common.KafkaException;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.network.Send;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.channels.GatheringByteChannel;
@@ -32,7 +30,6 @@ import java.util.Queue;
  * A set of composite sends with nested {@link RecordsSend}, sent one after another
  */
 public class MultiRecordsSend implements Send {
-    private static final Logger log = LoggerFactory.getLogger(MultiRecordsSend.class);
 
     private final String dest;
     private final Queue<Send> sendQueue;
@@ -101,11 +98,6 @@ public class MultiRecordsSend implements Send {
 
         totalWritten += totalWrittenPerCall;
 
-        if (completed() && totalWritten != size)
-            log.error("mismatch in sending bytes over socket; expected: {} actual: {}", size, totalWritten);
-
-        log.trace("Bytes written as part of multi-send call: {}, total bytes written so far: {}, expected bytes to write: {}",
-                totalWrittenPerCall, totalWritten, size);
 
         return totalWrittenPerCall;
     }

@@ -38,7 +38,7 @@ public class MemoryRecordsBuilder implements AutoCloseable {
     });
 
     private final TimestampType timestampType;
-    private final CompressionType compressionType;压缩器，对消息数据进行压缩，将压缩后的数据输出到buffer
+    private final CompressionType compressionType;//压缩器，对消息数据进行压缩，将压缩后的数据输出到buffer
     //封装了ByteBuffer，当写入数据超出ByteBuffer容量时，ByteBufferOutputStream会进行自动扩容
     private final ByteBufferOutputStream bufferStream;
     private final byte magic;

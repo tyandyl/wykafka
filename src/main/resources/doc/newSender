@@ -1,0 +1,38 @@
+Sender newSender(LogContext logContext, KafkaClient kafkaClient, ProducerMetadata metadata)
+主要看这两个：
+ChannelBuilder channelBuilder = ClientUtils.createChannelBuilder(producerConfig, time);
+KafkaClient client = kafkaClient != null ? kafkaClient : new NetworkClient(
+                new Selector(producerConfig.getLong("connections.max.idle.ms"),
+                        this.metrics, time, "producer", channelBuilder, logContext),
+                metadata,
+                clientId,
+                maxInflightRequests,
+                producerConfig.getLong(ProducerConfig.RECONNECT_BACKOFF_MS_CONFIG),
+                producerConfig.getLong(ProducerConfig.RECONNECT_BACKOFF_MAX_MS_CONFIG),
+                producerConfig.getInt(ProducerConfig.SEND_BUFFER_CONFIG),
+                producerConfig.getInt(ProducerConfig.RECEIVE_BUFFER_CONFIG),
+                requestTimeoutMs,
+                ClientDnsLookup.forConfig(producerConfig.getString(ProducerConfig.CLIENT_DNS_LOOKUP_CONFIG)),
+                time,
+                true,
+                apiVersions,
+                throttleTimeSensor,
+                logContext);
+-----------------------------------------------------------------------------------------------------
+ChannelBuilder channelBuilder = ClientUtils.createChannelBuilder(producerConfig, time);
+在这个方法里，首先获取SecurityProtocol值：
+  SecurityProtocol securityProtocol = SecurityProtocol.forName(config.getString("security.protocol"));
+这个值是个枚举值，有如下几个枚举：
+未经身份验证、未加密的通道
+SSL通道
+SASL认证，非加密通道
+SASL认证，SSL通道
+然后调用方法：
+ChannelBuilders.clientChannelBuilder(securityProtocol, JaasContext.Type.CLIENT, config, null,
+                clientSaslMechanism, time, true);
+参数解释如下：
+securityProtocol：看上边
+JaasContext.Type.CLIENT：客户端类型，JaasContext是认证授权类
+
+
+
