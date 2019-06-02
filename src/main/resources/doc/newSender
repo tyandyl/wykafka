@@ -34,6 +34,7 @@ ChannelBuilders.clientChannelBuilder(securityProtocol, JaasContext.Type.CLIENT, 
 securityProtocol：看上边
 JaasContext.Type.CLIENT：客户端类型，JaasContext是认证授权类
 1
+2
 
 
 
